@@ -13,11 +13,11 @@ Matt challenged me to do it, so I did it, ended up being a fun challenge
 
 ## Examples
 
-Analyse screenshot
+### Analyse screenshot
 
 `python CHStegano.py -i screenshot.png -o data.bin`
 
 
-Analyse dumped data
+### Analyse dumped data
 
 `python CHStegano.py -a -i data.bin`
