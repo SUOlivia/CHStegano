@@ -123,26 +123,36 @@ def AnalyseData(Data: bytes):
     pos += 0x01
     Player = str(Data[pos:pos+CurLen], 'utf-8')
     pos += CurLen + 0x01
-    Modifiers = DetectModifiers(int.from_bytes(Data[pos:pos+0x02], 'little'))
+    Modifiers = DetectModifiers(int.from_bytes(Data[pos:pos+0x01], 'little'))
     pos += 0x1F
     NotesHit = int.from_bytes(Data[pos:pos+0x04], 'little')
     pos += 0x04
     Notes = int.from_bytes(Data[pos:pos+0x04], 'little')
     Accuracy = str((NotesHit / Notes) * 100) + "%" if Notes != 0 else "Not applicable"
-
+    pos += 4
+    Streak = int.from_bytes(Data[pos:pos+0x04], 'little')
+    pos += 4
+    SPPhases_Hit = int.from_bytes(Data[pos:pos+0x04], 'little')
+    pos += 4
+    SPPhases_Total = int.from_bytes(Data[pos:pos+0x04], 'little')
+    pos += 4
+    FC = bool(Data[pos])
     
-    print(f"Checksum:   {SongChecksum}")
-    print(f"SongName:   {SongName}")
-    print(f"Artist:     {Artist}")
-    print(f"Charter:    {Charter}")
-    print(f"Score:      {Score}")
-    print(f"Accuracy:   {NotesHit}/{Notes} ({Accuracy})")
-    print(f"Stars:     {Stars}")
-    print(f"Instrument: {Instrument}")
-    print(f"Player:     {Player}")
+    print(f"Checksum:       {SongChecksum}")
+    print(f"SongName:       {SongName}")
+    print(f"Artist:         {Artist}")
+    print(f"Charter:        {Charter}")
+    print(f"Score:          {Score}")
+    print(f"Accuracy:       {NotesHit}/{Notes} ({Accuracy})")
+    print(f"Longest streak: {Streak}")
+    print(f"SP Phases:      {SPPhases_Hit}/{SPPhases_Total}")
+    print(f"Stars:         {Stars}")
+    print(f"FC:             {FC}")
+    print(f"Instrument:     {Instrument}")
+    print(f"Player:         {Player}")
     i = 1
     for Modifier in Modifiers:
-        print(f"Modifier {i}: {Modifier}")
+        print(f"Modifier {i}:     {Modifier}")
         i += 1
 
 if paths.analyse == False:
