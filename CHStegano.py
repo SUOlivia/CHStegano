@@ -4,6 +4,7 @@ import os
 import sys
 from PIL import Image
 import argparse
+import itertools
 
 args = argparse.ArgumentParser(description="Script to extract and parse data from Clone Hero's screenshots")
 
@@ -110,7 +111,7 @@ def AnalyseData(Data: bytes):
     i = 0
     Stars = ""
     if Data[pos] == 0:
-        Stars = "None"
+        Stars = " None"
     else:
         while i < Data[pos]:
             Stars += '⭐ ' 
@@ -123,12 +124,19 @@ def AnalyseData(Data: bytes):
     Player = str(Data[pos:pos+CurLen], 'utf-8')
     pos += CurLen + 0x01
     Modifiers = DetectModifiers(int.from_bytes(Data[pos:pos+0x02], 'little'))
+    pos += 0x1F
+    NotesHit = int.from_bytes(Data[pos:pos+0x04], 'little')
+    pos += 0x04
+    Notes = int.from_bytes(Data[pos:pos+0x04], 'little')
+    Accuracy = str((NotesHit / Notes) * 100) + "%" if Notes != 0 else "Not applicable"
+
     
     print(f"Checksum:   {SongChecksum}")
     print(f"SongName:   {SongName}")
     print(f"Artist:     {Artist}")
     print(f"Charter:    {Charter}")
     print(f"Score:      {Score}")
+    print(f"Accuracy:   {NotesHit}/{Notes} ({Accuracy})")
     print(f"Stars:     {Stars}")
     print(f"Instrument: {Instrument}")
     print(f"Player:     {Player}")
@@ -137,27 +145,26 @@ def AnalyseData(Data: bytes):
         print(f"Modifier {i}: {Modifier}")
         i += 1
 
-
-
-
-
 if paths.analyse == False:
     StartTime = time.time()
     EmbedScreenshot = Image.open(paths.screenshot, 'r').transpose(Image.FLIP_TOP_BOTTOM)
-    Pixels = list(EmbedScreenshot.getdata())
+    Pixels = itertools.islice(EmbedScreenshot.getdata(), 0x1000//3)
 
-    PixelData = [subpixel for pixel in Pixels for subpixel in pixel] # Get Separated RGBA values for each pixels
-    PixelData = [bin(Val) for Val in PixelData if Val != 0xFF] # Transform each subpixel values to binary while eliminating the alpha channel because no data is hidden in it
-    LSBs = [int(SB[-1], 2) for SB in PixelData][0:0x1000] # Get least significant bits
+    PixelData = [subpixel for pixel in Pixels for subpixel in pixel if subpixel != 0xFF] # Get Separated RGBA values for each pixels
+    LSBs = [SB & 1 for SB in PixelData] # Get least significant bits
 
 
     EmbedData = [sum([byte[b] << b for b in range(0,8)])
                 for byte in zip(*(iter(LSBs),) * 8)
                 ] # https://stackoverflow.com/questions/20541023/in-python-how-to-convert-array-of-bits-to-array-of-bytes
     EmbedData = bytes(EmbedData)
-    os.write(os.open(paths.outf, os.O_CREAT | os.O_BINARY | os.O_WRONLY), EmbedData)
+    if paths.outf != None and os.name == "nt":
+        os.write(os.open(paths.outf, os.O_CREAT | os.O_BINARY | os.O_WRONLY), EmbedData)
+    elif paths.outf != None and os.name == "posix":
+        os.write(os.open(paths.outf, os.O_CREAT | os.O_WRONLY), EmbedData)
 
-    print(f"It took {time.time() - StartTime} seconds to extract the data from the screenshot")
+    print(f"It took {(time.time() - StartTime) * 1000} ms to extract the data from the screenshot")
 else:
     EmbedData = os.read(os.open(paths.screenshot, os.O_RDONLY | os.O_BINARY), os.path.getsize(paths.screenshot))
+
 AnalyseData(EmbedData)
