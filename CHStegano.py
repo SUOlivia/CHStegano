@@ -13,17 +13,24 @@ args.add_argument('-a', '--analyse', action="store_true", dest="analyse", defaul
 args.add_argument('-i', '--input', action="store", dest="screenshot", type=str, help="Path to the screenshot")
 args.add_argument('-o', '--output', action="store", dest="outf", type=str, help="Path to extract the extracted data")
 
-# Init variables
-SongChecksum = ""
-SongName = ""
-Artist = ""
-Charter = ""
-Score = 0
-Stars = ""
-Player = ""
-Instrument = ""
-
-i = 0
+# Define fancy class cuz i wanna do print(CHScore.Player)
+class CHScore:
+    SongChecksum = ""
+    SongName = ""
+    Artist = ""
+    Charter = ""
+    Score = 0
+    Stars = ""
+    Instrument = ""
+    Player = ""
+    Modifiers = []
+    NotesHit = 0
+    NotesTotal = 0
+    Accuracy = 0.0
+    Streak = 0
+    SPPhases_Hit = 0
+    SPPhases_Total = 0
+    FC = False
 
 if len(sys.argv) < 3:
     args.print_help()
@@ -46,7 +53,7 @@ def IdentifyInstrument(instrumentID: int=0):
     elif instrumentID == 6:
         return "Drums"
     elif instrumentID == 7:
-        return"Keys"
+        return "Keys"
     elif instrumentID == 8:
         return "Band"
 
@@ -91,74 +98,73 @@ def DetectModifiers(modifier: int=1):
 
 def AnalyseData(Data: bytes):
     pos = 0x39
-    SongChecksum = str(Data[pos:pos+0x20], 'utf-8')
+    CHScore.SongChecksum = str(Data[pos:pos+0x20], 'utf-8')
     pos += 0x20
     CurLen = Data[pos]
     pos += 0x01
-    SongName = str(Data[pos:pos+CurLen], 'utf-8')
+    CHScore.SongName = str(Data[pos:pos+CurLen], 'utf-8')
     pos += CurLen
     CurLen = Data[pos]
     pos += 0x01
-    Artist = str(Data[pos:pos+CurLen], 'utf-8')
+    CHScore.Artist = str(Data[pos:pos+CurLen], 'utf-8')
     pos += CurLen
     CurLen = Data[pos]
     pos += 0x01
-    Charter = str(Data[pos:pos+CurLen], 'utf-8')
+    CHScore.Charter = str(Data[pos:pos+CurLen], 'utf-8')
     pos += CurLen
     pos += 0x0C
-    Score = int.from_bytes(Data[pos:pos+0x04], 'little')
+    CHScore.Score = int.from_bytes(Data[pos:pos+0x04], 'little')
     pos += 0x04
     i = 0
-    Stars = ""
     if Data[pos] == 0:
-        Stars = " None"
+        CHScore.Stars = "None"
     else:
         while i < Data[pos]:
-            Stars += '⭐ ' 
+            CHScore.Stars += '⭐' 
             i += 1 
     pos += 0x08
-    Instrument = IdentifyInstrument(Data[pos])
+    CHScore.Instrument = IdentifyInstrument(Data[pos])
     pos += 0x08
     CurLen = Data[pos]
     pos += 0x01
-    Player = str(Data[pos:pos+CurLen], 'utf-8')
+    CHScore.Player = str(Data[pos:pos+CurLen], 'utf-8')
     pos += CurLen + 0x01
-    Modifiers = DetectModifiers(int.from_bytes(Data[pos:pos+0x01], 'little'))
+    CHScore.Modifiers = DetectModifiers(int.from_bytes(Data[pos:pos+0x01], 'little'))
     pos += 0x1F
-    NotesHit = int.from_bytes(Data[pos:pos+0x04], 'little')
+    CHScore.NotesHit = int.from_bytes(Data[pos:pos+0x04], 'little')
     pos += 0x04
-    Notes = int.from_bytes(Data[pos:pos+0x04], 'little')
-    Accuracy = str((NotesHit / Notes) * 100) + "%" if Notes != 0 else "Not applicable"
+    CHScore.NotesTotal = int.from_bytes(Data[pos:pos+0x04], 'little')
+    CHScore.Accuracy = (CHScore.NotesHit / CHScore.NotesTotal) * 100 if CHScore.NotesTotal != 0 else 0.0
     pos += 4
-    Streak = int.from_bytes(Data[pos:pos+0x04], 'little')
+    CHScore.Streak = int.from_bytes(Data[pos:pos+0x04], 'little')
     pos += 4
-    SPPhases_Hit = int.from_bytes(Data[pos:pos+0x04], 'little')
+    CHScore.SPPhases_Hit = int.from_bytes(Data[pos:pos+0x04], 'little')
     pos += 4
-    SPPhases_Total = int.from_bytes(Data[pos:pos+0x04], 'little')
+    CHScore.SPPhases_Total = int.from_bytes(Data[pos:pos+0x04], 'little')
     pos += 4
-    FC = bool(Data[pos])
+    CHScore.FC = bool(Data[pos])
     
-    print(f"Checksum:       {SongChecksum}")
-    print(f"SongName:       {SongName}")
-    print(f"Artist:         {Artist}")
-    print(f"Charter:        {Charter}")
-    print(f"Score:          {Score}")
-    print(f"Accuracy:       {NotesHit}/{Notes} ({Accuracy})")
-    print(f"Longest streak: {Streak}")
-    print(f"SP Phases:      {SPPhases_Hit}/{SPPhases_Total}")
-    print(f"Stars:         {Stars}")
-    print(f"FC:             {FC}")
-    print(f"Instrument:     {Instrument}")
-    print(f"Player:         {Player}")
+    print(f"Checksum:       {CHScore.SongChecksum}")
+    print(f"SongName:       {CHScore.SongName}")
+    print(f"Artist:         {CHScore.Artist}")
+    print(f"Charter:        {CHScore.Charter}")
+    print(f"Score:          {CHScore.Score}")
+    print(f"Accuracy:       {CHScore.NotesHit}/{CHScore.NotesTotal} ({CHScore.Accuracy}%)")
+    print(f"Longest streak: {CHScore.Streak}")
+    print(f"SP Phases:      {CHScore.SPPhases_Hit}/{CHScore.SPPhases_Total}")
+    print(f"Stars:          {CHScore.Stars}")
+    print(f"FC:             {CHScore.FC}")
+    print(f"Instrument:     {CHScore.Instrument}")
+    print(f"Player:         {CHScore.Player}")
     i = 1
-    for Modifier in Modifiers:
+    for Modifier in CHScore.Modifiers:
         print(f"Modifier {i}:     {Modifier}")
         i += 1
 
 if paths.analyse == False:
     StartTime = time.time()
     EmbedScreenshot = Image.open(paths.screenshot, 'r').transpose(Image.FLIP_TOP_BOTTOM)
-    Pixels = itertools.islice(EmbedScreenshot.getdata(), 0x1000//3)
+    Pixels = itertools.islice(EmbedScreenshot.getdata(), 0x1000)
 
     PixelData = [subpixel for pixel in Pixels for subpixel in pixel if subpixel != 0xFF] # Get Separated RGBA values for each pixels
     LSBs = [SB & 1 for SB in PixelData] # Get least significant bits
