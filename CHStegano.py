@@ -147,9 +147,10 @@ def AnalyseData(Data: bytes):
     CHScore.FC = bool(Data[pos])
     
     print(f"Checksum:       {CHScore.SongChecksum}")
-    print(f"SongName:       {CHScore.SongName} ({CHScore.Speed}%)")
+    print(f"SongName:       {CHScore.SongName}")
     print(f"Artist:         {CHScore.Artist}")
     print(f"Charter:        {CHScore.Charter}")
+    print(f"Speed:          {CHScore.Speed}%")
     print(f"Score:          {CHScore.Score}")
     print(f"Accuracy:       {CHScore.NotesHit}/{CHScore.NotesTotal} ({CHScore.Accuracy}%)")
     print(f"Longest streak: {CHScore.Streak}")
