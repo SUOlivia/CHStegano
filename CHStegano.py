@@ -30,6 +30,7 @@ class CHScore:
     Streak = 0
     SPPhases_Hit = 0
     SPPhases_Total = 0
+    Speed = 100
     FC = False
 
 if len(sys.argv) < 3:
@@ -97,7 +98,7 @@ def DetectModifiers(modifier: int=1):
     return Modifiers    
 
 def AnalyseData(Data: bytes):
-    pos = 0x05 if Data[0:4] == 0x01000020 else 0x39 # Older versions didn't have ECC implemented
+    pos = 0x05 if Data[:5] == b'\x01\x00\x00\x00\x20' else 0x39 # Older versions didn't have ECC implemented
     CHScore.SongChecksum = str(Data[pos:pos+0x20], 'utf-8')
     pos += 0x20
     CurLen = Data[pos]
@@ -112,6 +113,7 @@ def AnalyseData(Data: bytes):
     pos += 0x01
     CHScore.Charter = str(Data[pos:pos+CurLen], 'utf-8')
     pos += CurLen
+    CHScore.Speed = Data[pos]
     pos += 0x0C
     CHScore.Score = int.from_bytes(Data[pos:pos+0x04], 'little')
     pos += 0x04
@@ -145,7 +147,7 @@ def AnalyseData(Data: bytes):
     CHScore.FC = bool(Data[pos])
     
     print(f"Checksum:       {CHScore.SongChecksum}")
-    print(f"SongName:       {CHScore.SongName}")
+    print(f"SongName:       {CHScore.SongName} ({CHScore.Speed}%)")
     print(f"Artist:         {CHScore.Artist}")
     print(f"Charter:        {CHScore.Charter}")
     print(f"Score:          {CHScore.Score}")
