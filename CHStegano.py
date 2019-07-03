@@ -97,7 +97,7 @@ def DetectModifiers(modifier: int=1):
     return Modifiers    
 
 def AnalyseData(Data: bytes):
-    pos = 0x39
+    pos = 0x05 if Data[0:4] == 0x01000020 else 0x39 # Older versions didn't have ECC implemented
     CHScore.SongChecksum = str(Data[pos:pos+0x20], 'utf-8')
     pos += 0x20
     CurLen = Data[pos]
