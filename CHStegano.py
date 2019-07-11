@@ -179,7 +179,7 @@ def AnalyseData(Data: bytes):
         
         p += 1
 
-if paths.screenshot.lower().endswith(".png") != -1:
+if paths.screenshot.lower().endswith(".png") == True:
     StartTime = time.time()
     EmbedScreenshot = Image.open(paths.screenshot, 'r').transpose(Image.FLIP_TOP_BOTTOM)
     Pixels = itertools.islice(EmbedScreenshot.getdata(), 0x1000)
