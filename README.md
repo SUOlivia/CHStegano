@@ -9,15 +9,19 @@ Matt challenged me to do it, so I did it, ended up being a fun challenge
 
 `-i`        Input screenshot or already dumped data
 
-`-o`        Output for the data (required at the moment)
+`-o`        Output for the data
 
 ## Examples
 
-### Analyse screenshot
+### Analyse screenshot with data output
+
+`python CHStegano.py -i screenshot.png`
+
+### Analyse screenshot with data output
 
 `python CHStegano.py -i screenshot.png -o data.bin`
 
 
 ### Analyse dumped data
 
-`python CHStegano.py -a -i data.bin`
+`python CHStegano.py -i data.bin`

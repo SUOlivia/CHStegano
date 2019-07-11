@@ -8,8 +8,6 @@ import itertools
 
 args = argparse.ArgumentParser(description="Script to extract and parse data from Clone Hero's screenshots")
 
-args.add_argument('-a', '--analyse', action="store_true", dest="analyse", default=False, help="Analyse extracted data provided with -i")
-
 args.add_argument('-i', '--input', action="store", dest="screenshot", type=str, help="Path to the screenshot")
 args.add_argument('-o', '--output', action="store", dest="outf", type=str, help="Path to extract the extracted data")
 
@@ -181,7 +179,7 @@ def AnalyseData(Data: bytes):
         
         p += 1
 
-if paths.analyse == False:
+if paths.screenshot.find(".png") != -1:
     StartTime = time.time()
     EmbedScreenshot = Image.open(paths.screenshot, 'r').transpose(Image.FLIP_TOP_BOTTOM)
     Pixels = itertools.islice(EmbedScreenshot.getdata(), 0x1000)
