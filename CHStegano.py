@@ -20,8 +20,8 @@ class CHPlayer:
     NotesHit = 0
     NotesTotal = 0
     Accuracy = 0.0
-    SPPhases_Hit = 0
-    SPPhases_Total = 0
+    SPPhrases_Hit = 0
+    SPPhrases_Total = 0
     Streak = 0
     FC = False
 
@@ -144,9 +144,9 @@ def AnalyseData(Data: bytes):
         pos += 4
         CurPlayer.Streak = int.from_bytes(Data[pos:pos+0x04], 'little')
         pos += 4
-        CurPlayer.SPPhases_Hit = int.from_bytes(Data[pos:pos+0x04], 'little')
+        CurPlayer.SPPhrases_Hit = int.from_bytes(Data[pos:pos+0x04], 'little')
         pos += 4
-        CurPlayer.SPPhases_Total = int.from_bytes(Data[pos:pos+0x04], 'little')
+        CurPlayer.SPPhrases_Total = int.from_bytes(Data[pos:pos+0x04], 'little')
         pos += 4
         CurPlayer.FC = bool(Data[pos])
         
@@ -163,7 +163,7 @@ def AnalyseData(Data: bytes):
         print(f"    Instrument:     {CHScore.Instrument}")
         print(f"    Accuracy:       {CurPlayer.NotesHit}/{CurPlayer.NotesTotal} ({CurPlayer.Accuracy}%)")
         print(f"    Longest streak: {CurPlayer.Streak}")
-        print(f"    SP Phases:      {CurPlayer.SPPhases_Hit}/{CurPlayer.SPPhases_Total}")
+        print(f"    SP Phrases:      {CurPlayer.SPPhrases_Hit}/{CurPlayer.SPPhrases_Total}")
         print(f"    FC:             {CurPlayer.FC}")
         
         if len(CurPlayer.Modifiers) == 1:
