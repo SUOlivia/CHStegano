@@ -13,17 +13,19 @@ args.add_argument('-o', '--output', action="store", dest="outf", type=str, help=
 
 # Define fancy classes cuz i wanna do print(CHScore.Player)
 class CHPlayer:
-    Name = ""
-    Instrument = ""
-    Modifiers = []
-    Score = 0
-    NotesHit = 0
-    NotesTotal = 0
-    Accuracy = 0.0
-    SPPhases_Hit = 0
-    SPPhases_Total = 0
-    Streak = 0
-    FC = False
+    def __init__(self, id):
+        self.Name = ""
+        self.Instrument = ""
+        self.Modifiers = []
+        self.Score = 0
+        self.NotesHit = 0
+        self.NotesTotal = 0
+        self.Accuracy = 0.0
+        self.SPPhases_Hit = 0
+        self.SPPhases_Total = 0
+        self.Streak = 0
+        self.FC = False
+        self.player = id
 
 class CHScore:
     SongChecksum = ""
@@ -34,7 +36,7 @@ class CHScore:
     Speed = 100
     Stars = ""
     PlayersNum = 1
-    Players = [CHPlayer] * PlayersNum
+    Players = []
 
 if len(sys.argv) < 3:
     args.print_help()
@@ -127,16 +129,24 @@ def AnalyseData(Data: bytes):
         while i < Data[pos]:
             CHScore.Stars += '⭐' 
             i += 1 
-    pos += 0x08
+    pos += 0x04
+    CHScore.PlayersNum = int.from_bytes(Data[pos:pos+0x04], 'little')
+    i=1
+    while(i <= CHScore.PlayersNum):
+        CHScore.Players.append(CHPlayer(i))
+        i += 1
+    pos += 0x04
     CHScore.Instrument = IdentifyInstrument(Data[pos])
-    pos += 0x08
-    CurLen = Data[pos]
-    pos += 0x01
     for CurPlayer in CHScore.Players:
+        pos += 0x08
+        CurLen = Data[pos]
+        pos += 0x01
         CurPlayer.Name = str(Data[pos:pos+CurLen], 'utf-8')
         pos += CurLen + 0x01
         CurPlayer.Modifiers = DetectModifiers(int.from_bytes(Data[pos:pos+0x01], 'little'))
-        pos += 0x1F
+        pos += 0x13
+        CurPlayer.Score = int.from_bytes(Data[pos:pos+0x04 if CurPlayer.player != 2 else pos+0x03], 'little')
+        pos += 0x0C if CurPlayer.player != 2 else 0x1C
         CurPlayer.NotesHit = int.from_bytes(Data[pos:pos+0x04], 'little')
         pos += 0x04
         CurPlayer.NotesTotal = int.from_bytes(Data[pos:pos+0x04], 'little')
@@ -148,7 +158,8 @@ def AnalyseData(Data: bytes):
         pos += 4
         CurPlayer.SPPhases_Total = int.from_bytes(Data[pos:pos+0x04], 'little')
         pos += 4
-        CurPlayer.FC = bool(Data[pos])
+        CurPlayer.FC = bool(Data[pos] & 1)
+        pos += 1
         
     print(f"Checksum:       {CHScore.SongChecksum}")
     print(f"SongName:       {CHScore.SongName}")
@@ -160,6 +171,7 @@ def AnalyseData(Data: bytes):
     p = 1
     for CurPlayer in CHScore.Players:
         print(f"Player {p}:           {CurPlayer.Name}")
+        print(f"    Score:          {CurPlayer.Score}")
         print(f"    Instrument:     {CHScore.Instrument}")
         print(f"    Accuracy:       {CurPlayer.NotesHit}/{CurPlayer.NotesTotal} ({CurPlayer.Accuracy}%)")
         print(f"    Longest streak: {CurPlayer.Streak}")
@@ -178,7 +190,7 @@ def AnalyseData(Data: bytes):
                 i += 1
         
         p += 1
-
+        
 if paths.screenshot.lower().endswith(".png") == True:
     StartTime = time.time()
     EmbedScreenshot = Image.open(paths.screenshot, 'r').transpose(Image.FLIP_TOP_BOTTOM)
@@ -197,8 +209,11 @@ if paths.screenshot.lower().endswith(".png") == True:
         os.write(os.open(paths.outf, os.O_CREAT | os.O_WRONLY), EmbedData)
 
     print(f"It took {(time.time() - StartTime) * 1000} ms to extract the data from the screenshot")
-else:
+elif os.name == "nt":
     EmbedData = os.read(os.open(paths.screenshot, os.O_RDONLY | os.O_BINARY), os.path.getsize(paths.screenshot))
+else:
+    EmbedData = os.read(os.open(paths.screenshot, os.O_RDONLY), os.path.getsize(paths.screenshot))
+
 
 t = time.time()
 AnalyseData(EmbedData)
