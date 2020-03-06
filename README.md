@@ -13,7 +13,7 @@ Matt challenged me to do it, so I did it, ended up being a fun challenge
 
 ## Examples
 
-### Analyse screenshot with data output
+### Analyse screenshot without data output
 
 `python CHStegano.py -i screenshot.png`
 
